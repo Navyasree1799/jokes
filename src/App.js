@@ -1,145 +1,112 @@
 /*Navyasree Putluri */
-import './App.css';
+/*import './App.css';*/
 import React, { useState } from 'react';
+import axios from "axios"
 
-import './index.css';
+const headerStyles = {
+  header: {
+    backgroundColor: '#eee',
+    padding: '1rem',
+  },
+  nav: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  list: {
+    display: 'flex',
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+  },
+  item: {
+    marginRight: '1rem',
+  },
+  link: {
+    color: '#333',
+    textDecoration: 'none',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    padding: '0.5rem 1rem',
+  },
+  hover: {
+    backgroundColor: '#333',
+    color: '#fff',
+  },
+};
 
-function Square(props) {
+const jokesStyles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+  },
+  button: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#eee',
+    border: 'none',
+    borderRadius: '4px',
+    margin: '1rem',
+    cursor: 'pointer',
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+  },
+  data: {
+    border: '1px solid #eee',
+    borderRadius: '4px',
+    padding: '1rem',
+    margin: '1rem 0',
+    maxWidth: '500px',
+    textAlign: 'center',
+    boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+  },
+  h1: {
+    fontSize: '2rem',
+    margin: '1rem',
+  },
+};
+
+
+const Header = () => {
   return (
-    <button className="square" onClick={props.onClick}>
-      {props.value === 'X' && <img src="path/to/x-image.png" alt="X" />}
-      {props.value === 'O' && <img src="path/to/o-image.png" alt="O" />}
-    </button>
+    <header style={headerStyles.header}>
+      <nav style={headerStyles.nav}>
+        <ul style={headerStyles.list}>
+          <li><a href="#" style={{ ...headerStyles.link, ...headerStyles.hover }}>Home</a></li>
+          <li style={headerStyles.item}><a href="#" style={headerStyles.link}>Logout</a></li>
+        </ul>
+      </nav>
+    </header>
   );
 }
 
-function Board(props) {
-  function renderSquare(i) {
-    return (
-      <Square
-        value={props.squares[i]}
-        onClick={() => props.onClick(i)}
-      />
-    );
+const Joke = () => {
+  const [joke, setJokes] = useState([]);
+
+  const apiLink = "https://icanhazdadjoke.com/";
+
+  const fetchData = async () => {
+    const res = await axios.get(`${apiLink}`, { headers: { Accept: "application/json" } });
+    console.log(res.data.joke);
+    setJokes([res.data.joke]);
   }
-
-  let boardSize = props.boardSize;
-  let rows = [];
-  for (let i = 0; i < boardSize; i++) {
-    let row = [];
-    for (let j = 0; j < boardSize; j++) {
-      row.push(renderSquare(i * boardSize + j));
-    }
-    rows.push(<div className="board-row">{row}</div>);
-  }
-
-  return <div>{rows}</div>;
-}
-
-
-
-function Game() {
-  const [history, setHistory] = useState([{ squares: Array(9).fill(null) }]);
-  const [stepNumber, setStepNumber] = useState(0);
-  const [xIsNext, setXIsNext] = useState(true);
-  const [boardSize, setBoardSize] = useState(3);
-
-  function handleClick(i) {
-    const newHistory = history.slice(0, stepNumber + 1);
-    const current = newHistory[newHistory.length - 1];
-    const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
-      return;
-    }
-    squares[i] = xIsNext ? 'X' : 'O';
-    setHistory(newHistory.concat([{ squares }]));
-    setStepNumber(newHistory.length);
-    setXIsNext(!xIsNext);
-  }
-
-  function jumpTo(step) {
-    setStepNumber(step);
-    setXIsNext(step % 2 === 0);
-  }
-
-  function calculateWinner(squares) {
-    const lines = [    // Rows    [0, 1, 2, 3],
-      [4, 5, 6, 7],
-      [8, 9, 10, 11],
-      [12, 13, 14, 15],
-      [16, 17, 18, 19],
-      // Columns
-      [0, 4, 8, 12],
-      [1, 5, 9, 13],
-      [2, 6, 10, 14],
-      [3, 7, 11, 15],
-      [16, 20, 24, 28],
-      [17, 21, 25, 29],
-      [18, 22, 26, 30],
-      [19, 23, 27, 31],
-      // Diagonals
-      [0, 5, 10, 15],
-      [3, 6, 9, 12],
-      [16, 21, 26, 31],
-      [19, 22, 25, 28],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c, d] = lines[i];
-      if (
-        squares[a] &&
-        squares[a] === squares[b] &&
-        squares[a] === squares[c] &&
-        squares[a] === squares[d]
-      ) {
-        return squares[a];
-      }
-    }
-    return null;
-  }
-
-  function handleBoardSizeChange(e) {
-    const newBoardSize = parseInt(e.target.value);
-    setBoardSize(newBoardSize);
-    setHistory([{ squares: Array(newBoardSize ** 2).fill(null) }]);
-    setStepNumber(0);
-    setXIsNext(true);
-  }
-
-  const current = history[stepNumber];
-  const winner = calculateWinner(current.squares);
-  const moves = history.map((step, move) => {
-    const desc = move ? 'Go to move #' + move : 'Go to game start';
-    return (
-      <div className="steps" key={move} >
-        {move + 1}. <button onClick={() => jumpTo(move)}>{desc}</button>
-      </div>
-    );
-  });
-
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
-  }
-
-
   return (
-    <div className="game">
-      <div className="game-board">
-        <Board squares={current.squares} onClick={handleClick} boardSize={boardSize} />
-      </div>
-      <div className="game-info">
-        <div>{status}</div>
-        <select value={boardSize} onChange={handleBoardSizeChange}>
-          <option value={3}>3x3</option>
-          <option value={4}>4x4</option>
-          <option value={5}>5x5</option>
-        </select>
-        <ol>{moves}</ol>
+    <div >
+      <Header />
+      <div style={jokesStyles.container}>
+
+        <h1 style={jokesStyles.h1}>Dad's Jokes</h1>
+        <button style={jokesStyles.button} onClick={fetchData}>Load jokes</button>
+        {joke && joke.map((j, index) => (
+          <div style={jokesStyles.data} key={index}>
+            {j}
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
 
-export default Game;
+export default Joke;
